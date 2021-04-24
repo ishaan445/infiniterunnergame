@@ -1,77 +1,148 @@
-const Engine = Matter.Engine;
-const World = Matter.World;
-const Bodies = Matter.Bodies;
-var thunder, thunder1,thunder2,thunder3,thunder4;
+var path,boy,cash,diamonds,jwellery,sword;
+var pathImg,boyImg,cashImg,diamondsImg,jwelleryImg,swordImg;
+var treasureCollection = 0;
+var cashG,diamondsG,jwelleryG,swordGroup;
 
-var engine, world;
-var drops = [];
-var rand;
-
-var maxDrops=100;
-
-var thunderCreatedFrame=0;
+//Game States
+var PLAY=1;
+var END=0;
+var gameState=1;
 
 function preload(){
-    thunder1 = loadImage("thunderbolt/1.png");
-    thunder2 = loadImage("thunderbolt/2.png");
-    thunder3 = loadImage("thunderbolt/3.png");
-    thunder4 = loadImage("thunderbolt/4.png");
+  pathImg = loadImage("Road.png");
+  boyImg = loadAnimation("Runner-1.png","Runner-2.png");
+  cashImg = loadImage("cash.png");
+  diamondsImg = loadImage("diamonds.png");
+  jwelleryImg = loadImage("jwell.png");
+  swordImg = loadImage("sword.png");
+  endImg =loadAnimation("gameOver.png");
 }
 
 function setup(){
-    engine = Engine.create();
-    world = engine.world;
+  
+  createCanvas(windowWidth,windowHeight);
+// Moving background
+path=createSprite(width/2,200);
+path.addImage(pathImg);
+path.velocityY = 4;
 
-    createCanvas(400,700);
-    umbrella = new Umbrella(200,500);
 
-    //creating drops
-    if(frameCount % 150 === 0){
+//creating boy running
+boy = createSprite(width/2,height-20,20,20);
+boy.addAnimation("SahilRunning",boyImg);
+boy.scale=0.08;
+  
+  
+cashG=new Group();
+diamondsG=new Group();
+jwelleryG=new Group();
+swordGroup=new Group();
 
-        for(var i=0; i<maxDrops; i++){
-            drops.push(new createDrop(random(0,400), random(0,400)));
-        }
-
-    }
-    
 }
 
-function draw(){
-    Engine.update(engine);
-    background(0); 
+function draw() {
 
-    //creating thunder
-    rand = Math.round(random(1,4));
-    if(frameCount%80===0){
-        thunderCreatedFrame=frameCount;
-        thunder = createSprite(random(10,370), random(10,30), 10, 10);
-        switch(rand){
-            case 1: thunder.addImage(thunder1);
-            break;
-            case 2: thunder.addImage(thunder2);
-            break; 
-            case 3: thunder.addImage(thunder3);
-            break;
-            case 4: thunder.addImage(thunder4);
-            break;
-            default: break;
-        }
-        thunder.scale = random(0.3,0.6)
+  if(gameState===PLAY){
+  background(0);
+  boy.x = World.mouseX;
+  
+   camera.x = boy.x;
+
+  edges= createEdgeSprites();
+  boy.collide(edges);
+  
+  //code to reset the background
+  if(path.y > height){
+    path.y = height/2;
+  }
+  
+    createCash();
+    createDiamonds();
+    createJwellery();
+    createSword();
+
+    if (cashG.isTouching(boy)) {
+      cashG.destroyEach();
+      treasureCollection=treasureCollection+50;
     }
-
-    if(thunderCreatedFrame + 10 ===frameCount && thunder){
-        thunder.destroy();
-    }
-
-    umbrella.display();
-
-    //displaying rain drops
-    for(var i = 0; i<maxDrops; i++){
-        drops[i].showDrop();
-        drops[i].updateY()
+    else if (diamondsG.isTouching(boy)) {
+      diamondsG.destroyEach();
+      treasureCollection=treasureCollection+100;
+      
+    }else if(jwelleryG.isTouching(boy)) {
+      jwelleryG.destroyEach();
+      treasureCollection= treasureCollection + 150;
+      
+    }else{
+      if(swordGroup.isTouching(boy)) {
+        gameState=END;
         
+        boy.addAnimation("SahilRunning",endImg);
+        boy.x=270;
+        boy.y=200;
+        boy.scale=0.6;
+       
+        cashG.destroyEach();
+        diamondsG.destroyEach();
+        jwelleryG.destroyEach();
+        swordGroup.destroyEach();
+        
+        cashG.setVelocityYEach(0);
+        diamondsG.setVelocityYEach(0);
+        jwelleryG.setVelocityYEach(0);
+        swordGroup.setVelocityYEach(0);
+      
     }
+  }
+  
+  drawSprites();
+  textSize(20);
+  fill(255);
+  }
 
-    drawSprites();
-}   
+}
 
+function createCash() {
+  if (World.frameCount % 200 == 0) {
+  var cash = createSprite(Math.round(random(50,width-50),40, 10, 10));
+  cash.addImage(cashImg);
+  cash.scale=0.12;
+  cash.velocityY = 3;
+  cash.lifetime = 150;
+  cashG.add(cash);
+  }
+}
+
+function createDiamonds() {
+  if (World.frameCount % 320 == 0) {
+  var diamonds = createSprite(Math.round(random(50, width-50),40, 10, 10));
+  diamonds.addImage(diamondsImg);
+  diamonds.scale=0.03;
+  diamonds.velocityY = 3;
+  diamonds.lifetime = 150;
+  diamondsG.add(diamonds);
+}
+}
+
+function createJwellery() {
+  if (World.frameCount % 410 == 0) {
+  var jwellery = createSprite(Math.round(random(50, width-50),40, 10, 10));
+  jwellery.addImage(jwelleryImg);
+  jwellery.scale=0.13;
+  jwellery.velocityY = 3;
+  jwellery.lifetime = 150;
+  jwelleryG.add(jwellery);
+  }
+}
+
+function createSword(){
+  if (World.frameCount % 530 == 0) {
+  var sword = createSprite(Math.round(random(50, width-50),40, 10, 10));
+  sword.addImage(swordImg);
+  sword.scale=0.1;
+  sword.velocityY = 3;
+  sword.lifetime = 150;
+  swordGroup.add(sword);
+  }
+ 
+}
